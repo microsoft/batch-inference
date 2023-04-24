@@ -1,33 +1,68 @@
-# Project
+# Batch Inference Toolkit
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+Batch Inference Toolkit(batch-inference) is a Python package that batches model input tensors coming from multiple users dynamically, executes the model, un-batches output tensors and then returns them back to each user respectively. This will improve system throughput because of a better cache locality. The entire process is transparent to developers.
 
-As the maintainer of this project, please make a few updates:
+## Installation
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+**Install from Pip** _(Coming Soon)_
 
-## Contributing
+```bash
+python -m pip install batch-inference --upgrade
+```
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+**Build and Install from Source** _(for developers)_
 
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+```bash
+git clone https://github.com/microsoft/batch-inference.git
+python -m pip install -e .[docs,testing]
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+# if you want to format the code before commit
+pip install pre-commit
+pre-commit install
 
-## Trademarks
+# run unittests
+python -m unittest discover tests
+```
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+## Example
+
+```python
+import threading
+import numpy as np
+from batch_inference import batching
+
+
+@batching(max_batch_size=32)
+class MyModel:
+    def __init__(self, k, n):
+        self.weights = np.random.randn((k, n)).astype("f")
+
+    # x: [batch_size, m, k], self.weights: [k, n]
+    def predict_batch(self, x):
+        y = np.matmul(x, self.weights)
+        return y
+
+
+with MyModel.host(3, 3) as host:
+    def send_requests():
+        for _ in range(0, 10):
+            x = np.random.randn(1, 3, 3).astype("f")
+            y = host.predict(x)
+
+    threads = [threading.Thread(target=send_requests) for i in range(0, 32)]
+    [th.start() for th in threads]
+    [th.join() for th in threads]
+
+```
+
+## Build the Docs
+
+Run the following commands and open `docs/_build/html/index.html` in browser.
+
+```bash
+pip install sphinx myst-parser sphinx-rtd-theme sphinxemoji
+cd docs/
+
+make html         # for linux
+.\make.bat html   # for windows
+```

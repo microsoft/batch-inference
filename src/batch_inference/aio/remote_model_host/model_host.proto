@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+message Request {
+  bytes ndarrays = 1;
+}
+
+message Response {
+  bytes ndarrays = 1;
+}
+
+service ModelHost {
+  rpc predict (Request) returns (Response) {}
+}
