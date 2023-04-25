@@ -70,12 +70,11 @@ class ModelHost:
             self.threads.append(thread)
 
     def stop(self):
-        logger.debug(f"stop() is called")
         self.stopped = True
-        logger.debug(f"notify worker thread to stop")
+        logger.debug(f"notify worker threads to stop")
         for thread in self.threads:
             thread.join()
-        logger.debug(f"worker thread is stopped")
+        logger.debug(f"all worker threads are stopped")
 
     def _get_new_batch(self, idx) -> List[BatchContext]:
         # blocking util get at least request
@@ -117,7 +116,7 @@ class ModelHost:
             batch_list = self._get_new_batch(idx)
             if len(batch_list) == 0:
                 continue
-            logging.debug(f"Batch Size: {len(batch_list)}")
+            # logger.info(f"get batch size: {len(batch_list)}")
             try:
                 requests = [batch_ctx.request for batch_ctx in batch_list]
                 batched_requests, unbatch_ctx = self.batcher.batch(requests)
