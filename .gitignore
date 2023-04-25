@@ -144,3 +144,4 @@ output*
 *.out
 pyflame*
 *.cprofile
+* copy.*

@@ -23,6 +23,7 @@ class ModelHost:
         max_batch_size=32,
         wait_ms: int = 5,
         wait_n: int = 16,
+        num_workers: int = 1,
         event_loop=None,
     ):
         if model_cls is None and model_obj is None:
@@ -42,7 +43,8 @@ class ModelHost:
         self.event_loop = event_loop
         self.cv = None
         self.batch_queue = []
-        self.thread = None
+        self.num_workers = num_workers
+        self.threads = []
 
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         if self.model_obj is not None:
@@ -80,17 +82,19 @@ class ModelHost:
         else:
             batch_queue_lock = asyncio.Lock(loop=self.event_loop)
             self.cv = asyncio.Condition(lock=batch_queue_lock, loop=self.event_loop)
-        self.thread = threading.Thread(target=self._wait_batch_ready_and_process)
-        self.thread.start()
+        for _ in range(self.num_workers):
+            thread = threading.Thread(target=self._wait_batch_ready_and_process)
+            thread.start()
+            self.threads.append(thread)
 
     async def stop(self):
-        logger.debug(f"stop() is called")
         async with self.cv:
             self.batch_queue.append(None)
-            self.cv.notify(n=1)
-        logger.debug(f"notify worker thread to stop")
-        await self.event_loop.run_in_executor(None, self.thread.join)
-        logger.debug(f"worker thread is stopped")
+            self.cv.notify_all()
+        logger.debug(f"notify worker threads to stop")
+        for thread in self.threads:
+            await self.event_loop.run_in_executor(None, thread.join)
+        logger.debug(f"all worker threads are stopped")
 
     async def _get_new_batch(self):
         # WorkerLoop will be notified when there's a new request
@@ -114,9 +118,11 @@ class ModelHost:
             except asyncio.TimeoutError:
                 # logger.info(f'wait batch size to reach {early_ret_n} timeout, actual batch size={len(self.batch_queue[0].requests)}')
                 pass
-            batch_ctx: BatchContext = self.batch_queue.pop(0)
-
-            return batch_ctx
+            
+            if self.batch_queue[0] is None:
+                return None
+            else:
+                return self.batch_queue.pop(0)
 
     def _wait_batch_ready_and_process(self):
         while True:
@@ -148,7 +154,7 @@ class ModelHost:
                 logger.error(e, exc_info=True)
 
     async def __aenter__(self):
-        self.start()
+        await self.start()
         return self
 
     async def __aexit__(
