@@ -24,6 +24,7 @@ class RemoteModelHost:
         max_batch_size=32,
         wait_ms: int = 5,
         wait_n: int = 16,
+        num_workers: int = 1,
         event_loop=None,
     ):
         file_lock = self._get_server_file_lock(grpc_port)
@@ -37,6 +38,7 @@ class RemoteModelHost:
                 max_batch_size=max_batch_size,
                 wait_ms=wait_ms,
                 wait_n=wait_n,
+                num_workers=num_workers,
                 event_loop=event_loop,
             )
         else:

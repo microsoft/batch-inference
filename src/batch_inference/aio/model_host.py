@@ -132,7 +132,7 @@ class ModelHost:
             if batch_ctx is None:
                 return
 
-            #logger.info(f"get batch of size {len(batch_ctx.requests)}")
+            # logger.info(f"get batch of size {len(batch_ctx.requests)}")
 
             try:
                 batched_requests, unbatch_ctx = self.batcher.batch(batch_ctx.requests)
