@@ -6,7 +6,7 @@ import unittest
 
 import numpy as np
 
-from batch_inference import ModelHost
+from batch_inference import ModelHost, aio
 from batch_inference.batcher import ConcatBatcher
 
 
@@ -25,6 +25,44 @@ class TestModelHost(unittest.TestCase):
         self.num_workers = 10
         self.weights = np.random.randn(3, 3).astype("f")
         self.model_host = ModelHost(
+            MyModel,
+            batcher=ConcatBatcher(),
+            max_batch_size=self.num_workers,
+        )(self.weights)
+        self.model_host.start()
+
+    def tearDown(self) -> None:
+        self.model_host.stop()
+
+    def test_simple(self):
+        x = np.random.randn(1, 3, 3).astype("f")
+        y = self.model_host.predict(x)
+        print(y)
+        self.assertTrue(
+            np.allclose(y, np.matmul(x, self.weights), rtol=1e-05, atol=1e-05)
+        )
+
+    def test_concurrent(self):
+        def send_requests():
+            for _ in range(0, 10):
+                x = np.random.randn(1, 3, 3).astype("f")
+                y = self.model_host.predict(x)
+                self.assertTrue(
+                    np.allclose(y, np.matmul(x, self.weights), rtol=1e-05, atol=1e-05),
+                )
+
+        threads = [
+            threading.Thread(target=send_requests) for i in range(0, self.num_workers)
+        ]
+        [th.start() for th in threads]
+        [th.join() for th in threads]
+
+
+class TestModelHostAIO(unittest.TestCase):
+    def setUp(self) -> None:
+        self.num_workers = 10
+        self.weights = np.random.randn(3, 3).astype("f")
+        self.model_host = aio.ModelHost(
             MyModel,
             batcher=ConcatBatcher(),
             max_batch_size=self.num_workers,

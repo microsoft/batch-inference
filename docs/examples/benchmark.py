@@ -25,7 +25,7 @@ def add_timer_to_model(model_obj):
     model_obj.predict_batch = MethodType(predit_batch_with_timer, model_obj)
 
 
-def benchmark_sync(host, queries, num_calls, max_workers):
+def benchmark_sync(host, queries, num_calls, parallel):
     add_timer_to_model(host.model_obj)
     
     def request(i):
@@ -34,7 +34,7 @@ def benchmark_sync(host, queries, num_calls, max_workers):
 
     print("Start Running")
     start_time = time.time()
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+    with ThreadPoolExecutor(max_workers=parallel) as executor:
         futures = [executor.submit(request, i) for i in range(num_calls)]
         result = [f.result() for f in as_completed(futures)]
     end_time = time.time()
@@ -60,7 +60,7 @@ async def benchmark_async(host, queries, num_calls):
     print(f"Compute time ({len(host.model_obj.compute_times)}): {compute_times} seconds")
 
 
-def benchmark(model_obj, queries, num_calls, max_workers):
+def benchmark(model_obj, queries, num_calls, parallel):
     add_timer_to_model(model_obj)
     
     def request(i):
@@ -69,7 +69,7 @@ def benchmark(model_obj, queries, num_calls, max_workers):
 
     print("Start Running")
     start_time = time.time()
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+    with ThreadPoolExecutor(max_workers=parallel) as executor:
         futures = [executor.submit(request, i) for i in range(num_calls)]
         result = [f.result() for f in as_completed(futures)]
     end_time = time.time()
