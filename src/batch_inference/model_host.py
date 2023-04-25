@@ -116,7 +116,7 @@ class ModelHost:
             batch_list = self._get_new_batch(idx)
             if len(batch_list) == 0:
                 continue
-            # logger.info(f"get batch size: {len(batch_list)}")
+            # logger.info(f"get batch of size {len(batch_list)}")
             try:
                 requests = [batch_ctx.request for batch_ctx in batch_list]
                 batched_requests, unbatch_ctx = self.batcher.batch(requests)
