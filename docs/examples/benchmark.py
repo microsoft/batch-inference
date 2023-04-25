@@ -11,7 +11,7 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
-def add_timer_to_host(model_obj):
+def add_timer_to_model(model_obj):
     model_obj.lock = threading.Lock()
     model_obj.compute_times = defaultdict(float)
     model_obj.predit_batch_origin = model_obj.predict_batch
@@ -26,7 +26,7 @@ def add_timer_to_host(model_obj):
 
 
 def benchmark_sync(host, queries, num_calls, max_workers):
-    add_timer_to_host(host.model_obj)
+    add_timer_to_model(host.model_obj)
     
     def request(i):
         q = queries[i % len(queries)]
@@ -39,11 +39,12 @@ def benchmark_sync(host, queries, num_calls, max_workers):
         result = [f.result() for f in as_completed(futures)]
     end_time = time.time()
     print(f"Total time: {end_time - start_time:.6f} seconds")
-    print(f"Compute time ({len(host.model_obj.compute_times)}): {host.model_obj.compute_times} seconds")
+    compute_times = {k: round(v, 6) for k, v in host.model_obj.compute_times.items()}
+    print(f"Compute time ({len(host.model_obj.compute_times)}): {compute_times} seconds")
 
 
 async def benchmark_async(host, queries, num_calls):
-    add_timer_to_host(host.model_obj)
+    add_timer_to_model(host.model_obj)
 
     async def request(i):
         q = queries[i % len(queries)]
@@ -55,11 +56,12 @@ async def benchmark_async(host, queries, num_calls):
     await asyncio.wait(tasks)
     end_time = time.time()
     print(f"Total time: {end_time - start_time:.6f} seconds")
-    print(f"Compute time ({len(host.model_obj.compute_times)}): {host.model_obj.compute_times} seconds")
+    compute_times = {k: round(v, 6) for k, v in host.model_obj.compute_times.items()}
+    print(f"Compute time ({len(host.model_obj.compute_times)}): {compute_times} seconds")
 
 
 def benchmark(model_obj, queries, num_calls, max_workers):
-    add_timer_to_host(model_obj)
+    add_timer_to_model(model_obj)
     
     def request(i):
         q = queries[i % len(queries)]
@@ -72,4 +74,5 @@ def benchmark(model_obj, queries, num_calls, max_workers):
         result = [f.result() for f in as_completed(futures)]
     end_time = time.time()
     print(f"Total time: {end_time - start_time:.6f} seconds")
-    print(f"Compute time ({len(model_obj.compute_times)}): {model_obj.compute_times} seconds")
+    compute_times = {k: round(v, 6) for k, v in model_obj.compute_times.items()}
+    print(f"Compute time ({len(model_obj.compute_times)}): {compute_times} seconds")
