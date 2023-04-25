@@ -43,6 +43,7 @@ class ModelHostServer:
         max_batch_size=32,
         wait_ms: int = 5,
         wait_n: int = 16,
+        num_workers: int = 1,
         event_loop=None,
     ):
         self.model_cls = model_cls
@@ -50,6 +51,7 @@ class ModelHostServer:
         self.max_batch_size = max_batch_size
         self.wait_ms = wait_ms
         self.wait_n = wait_n
+        self.num_workers = num_workers
 
         if event_loop is None:
             self.event_loop = asyncio.get_event_loop()
@@ -69,6 +71,7 @@ class ModelHostServer:
             max_batch_size=self.max_batch_size,
             wait_ms=self.wait_ms,
             wait_n=self.wait_n,
+            num_workers=self.num_workers,
             event_loop=self.event_loop,
         )(*args, **kwds)
         return self
