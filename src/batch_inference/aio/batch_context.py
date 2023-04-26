@@ -6,22 +6,22 @@ from typing import Any
 
 
 class BatchContext:
-    def __init__(self) -> None:
-        self.requests = []
-        self.responses = []
-        self.result_ready = asyncio.Event()
+    def __init__(self, request: Any) -> None:
+        self.request = request
+        self.response = None
         self.error = None
+        self.response_ready = asyncio.Event()
 
-    def size(self):
-        return len(self.requests)
+    async def get_response(self) -> Any:
+        await self.response_ready.wait()
+        if self.error is not None:
+            raise self.error
+        return self.response
 
-    def add_request(self, request: Any):
-        self.requests.append(request)
-        return len(self.requests) - 1
-
-    def set_result_ready(self):
-        self.result_ready.set()
+    def set_response(self, response: Any = None):
+        self.response = response
+        self.response_ready.set()
 
     def set_error(self, error: Exception):
         self.error = error
-        self.result_ready.set()
+        self.response_ready.set()

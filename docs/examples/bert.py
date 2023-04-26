@@ -38,7 +38,7 @@ if __name__ == "__main__":
     #         wait_ms=5,
     #         wait_n=4,
     #         num_workers=4)() as host:   
-    #     benchmark_sync(host, queries, num_calls=1000, max_workers=16)
+    #     benchmark_sync(host, queries, num_calls=1000, parallel=16)
     
     # batching, async
     async def run_async():
@@ -54,4 +54,4 @@ if __name__ == "__main__":
     
     # # no batching
     # sut = BatchBertModel()  
-    # benchmark(sut, queries, num_calls=1000, max_workers=16)
+    # benchmark(sut, queries, num_calls=1000, parallel=16)

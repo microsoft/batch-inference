@@ -32,9 +32,12 @@ class ModelHost:
         self.batcher = batcher
         self.max_batch_size = max_batch_size
         self.wait_n = wait_n
+        if self.wait_n > self.max_batch_size:
+            self.wait_n = self.max_batch_size
+        
         self.num_workers = num_workers
         self.wait_ms = wait_ms
-        self.cycle_time = 0.1
+        self.cycle_time = 1.0
         self.stopped = True
         # double queue size to avoid blocking
         self.batch_queue = [queue.Queue(maxsize=2 * max_batch_size)] * num_workers
@@ -77,7 +80,7 @@ class ModelHost:
         logger.debug(f"all worker threads are stopped")
 
     def _get_new_batch(self, idx) -> List[BatchContext]:
-        # blocking util get at least request
+        # blocking until get at least one request
         try:
             batch_list: List[BatchContext] = [
                 self.batch_queue[idx].get(block=True, timeout=self.cycle_time)
@@ -85,7 +88,7 @@ class ModelHost:
         except queue.Empty:
             return []
 
-        # append the left requests
+        # get more already arrived requests
         while (
             len(batch_list) < self.max_batch_size and not self.batch_queue[idx].empty()
         ):
@@ -95,18 +98,18 @@ class ModelHost:
                 break
 
         # check if we still need to wait
-        if self.wait_ms < 0 or len(batch_list) >= self.wait_n:
+        if self.wait_ms <= 0 or len(batch_list) >= self.wait_n:
             return batch_list
 
         # wait for `wait_ms` ms to see if there's more requests to batch
-        current_time = time.time()
+        current_time = time.perf_counter()
         end_time = current_time + self.wait_ms / 1000.0
         while end_time - current_time > 0 and len(batch_list) < self.wait_n:
             try:
                 batch_list.append(
                     self.batch_queue[idx].get(timeout=end_time - current_time)
                 )
-                current_time = time.time()
+                current_time = time.perf_counter()
             except queue.Empty:
                 break
         return batch_list
