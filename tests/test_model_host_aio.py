@@ -1,12 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import threading
 import unittest
+import asyncio
+import multiprocessing
 
 import numpy as np
 
-from batch_inference import ModelHost, aio
+from batch_inference import aio
 from batch_inference.batcher import ConcatBatcher
 
 
@@ -20,54 +21,51 @@ class MyModel:
         return y
 
 
-class TestModelHost(unittest.TestCase):
-    def setUp(self) -> None:
-        self.num_workers = 10
+class TestModelHost(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self) -> None:
         self.weights = np.random.randn(3, 3).astype("f")
-        self.model_host = ModelHost(
+        self.model_host = aio.ModelHost(
             MyModel,
             batcher=ConcatBatcher(),
-            max_batch_size=self.num_workers,
+            max_batch_size=32,
+            num_workers=multiprocessing.cpu_count()
         )(self.weights)
-        self.model_host.start()
+        await self.model_host.start()
 
-    def tearDown(self) -> None:
-        self.model_host.stop()
+    async def asyncTearDown(self) -> None:
+        await self.model_host.stop()
 
-    def test_simple(self):
+    async def test_simple(self):
         x = np.random.randn(1, 3, 3).astype("f")
-        y = self.model_host.predict(x)
+        y = await self.model_host.predict(x)
         print(y)
         self.assertTrue(
             np.allclose(y, np.matmul(x, self.weights), rtol=1e-05, atol=1e-05)
         )
 
-    def test_concurrent(self):
-        def send_requests():
-            for _ in range(0, 10):
-                x = np.random.randn(1, 3, 3).astype("f")
-                y = self.model_host.predict(x)
-                self.assertTrue(
-                    np.allclose(y, np.matmul(x, self.weights), rtol=1e-05, atol=1e-05),
-                )
+    async def test_concurrent(self):
+        
+        async def request(i):
+            x = np.random.randn(1, 3, 3).astype("f")
+            y = await self.model_host.predict(x)
+            self.assertTrue(
+                np.allclose(y, np.matmul(x, self.weights), rtol=1e-05, atol=1e-05),
+            )
 
-        threads = [
-            threading.Thread(target=send_requests) for i in range(0, self.num_workers)
-        ]
-        [th.start() for th in threads]
-        [th.join() for th in threads]
+        tasks = [asyncio.create_task(request(i)) for i in range(1000)]
+        await asyncio.wait(tasks)
 
 
-class TestModelHostWithAs(unittest.TestCase):
-    def test_withas(self):
+class TestModelHostWithAs(unittest.IsolatedAsyncioTestCase):
+    async def test_withas(self):
         weights = np.random.randn(3, 3).astype("f")
-        with ModelHost(
+        async with aio.ModelHost(
             MyModel,
             batcher=ConcatBatcher(),
             max_batch_size=10,
         )(weights) as model_host:
             x = np.random.randn(1, 3, 3).astype("f")
-            y = model_host.predict(x)
+            y = await model_host.predict(x)
             self.assertTrue(
                 np.allclose(y, np.matmul(x, weights), rtol=1e-05, atol=1e-05)
             )

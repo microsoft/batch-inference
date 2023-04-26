@@ -145,10 +145,10 @@ class ModelHost:
                     unbatch_ctx,
                 )
                 for i, ctx in enumerate(batch_list):
-                    ctx.set_response(responses[i])
+                    self.event_loop.call_soon_threadsafe(ctx.set_response, responses[i])
             except Exception as e:
                 for ctx in batch_list:
-                    ctx.set_error(e)
+                    self.event_loop.call_soon_threadsafe(ctx.set_error, e)
                 logger.error(e, exc_info=True)
 
     async def __aenter__(self):
