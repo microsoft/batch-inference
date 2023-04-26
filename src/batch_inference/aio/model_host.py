@@ -7,7 +7,7 @@ import sys
 import threading
 import time
 from types import TracebackType
-from typing import Any, Optional, Type, List
+from typing import Any, List, Optional, Type
 
 from ..batcher.batcher import Batcher
 from ..batcher.multi_batcher import MultiBatcher
@@ -91,21 +91,19 @@ class ModelHost:
     async def _get_new_batch(self):
         batch_list = []
 
-        async with self.cv:        
+        async with self.cv:
             await self.cv.wait_for(lambda: len(self.batch_queue) > 0)
-                           
+
             # get already arrived requests
-            while (
-                len(batch_list) < self.max_batch_size and len(self.batch_queue) > 0
-            ):
-                if self.batch_queue[0] is None: # end of processing
+            while len(batch_list) < self.max_batch_size and len(self.batch_queue) > 0:
+                if self.batch_queue[0] is None:  # end of processing
                     return batch_list
                 batch_list.append(self.batch_queue.pop(0))
-            
+
             # check if we still need to wait
             if self.wait_ms <= 0 or len(batch_list) >= self.wait_n:
                 return batch_list
-            
+
             # wait for `wait_ms` ms to see if there's more requests to batch
             current_time = time.perf_counter()
             end_time = current_time + self.wait_ms / 1000.0
@@ -115,18 +113,20 @@ class ModelHost:
                         self.cv.wait_for(lambda: len(self.batch_queue) > 0),
                         end_time - current_time,
                     )
-                    if self.batch_queue[0] is None: # end of processing
+                    if self.batch_queue[0] is None:  # end of processing
                         return batch_list
                     batch_list.append(self.batch_queue.pop(0))
                     current_time = time.perf_counter()
                 except asyncio.TimeoutError:
-                    logger.info(f'wait batch size to reach {self.wait_n} timeout(={self.wait_ms}ms), actual batch size={len(batch_list)}')
-                    break      
+                    # logger.info(f'wait batch size to reach {self.wait_n} timeout(={self.wait_ms}ms), actual batch size={len(batch_list)}')
+                    break
         return batch_list
 
     def _wait_batch_ready_and_process(self):
         while True:
-            batch_list = asyncio.run_coroutine_threadsafe(self._get_new_batch(), self.event_loop).result()
+            batch_list = asyncio.run_coroutine_threadsafe(
+                self._get_new_batch(), self.event_loop
+            ).result()
             if len(batch_list) == 0:
                 break
             # logger.info(f"get batch of size {len(batch_list)}")
