@@ -90,9 +90,8 @@ class ModelHost:
 
     async def _get_new_batch(self):
         batch_list = []
-        
-        # take first BatchContext out of queue
-        async with self.cv:          
+
+        async with self.cv:        
             await self.cv.wait_for(lambda: len(self.batch_queue) > 0)
                            
             # get already arrived requests
@@ -121,7 +120,7 @@ class ModelHost:
                     batch_list.append(self.batch_queue.pop(0))
                     current_time = time.perf_counter()
                 except asyncio.TimeoutError:
-                    # logger.info(f'wait batch size to reach {self.wait_n} timeout, actual batch size={len(batch_list)}')
+                    logger.info(f'wait batch size to reach {self.wait_n} timeout(={self.wait_ms}ms), actual batch size={len(batch_list)}')
                     break      
         return batch_list
 
@@ -129,7 +128,7 @@ class ModelHost:
         while True:
             batch_list = asyncio.run_coroutine_threadsafe(self._get_new_batch(), self.event_loop).result()
             if len(batch_list) == 0:
-                return
+                break
             # logger.info(f"get batch of size {len(batch_list)}")
             try:
                 requests = [batch_ctx.request for batch_ctx in batch_list]
@@ -150,6 +149,7 @@ class ModelHost:
                 for ctx in batch_list:
                     self.event_loop.call_soon_threadsafe(ctx.set_error, e)
                 logger.error(e, exc_info=True)
+        # logger.info(f'worker thread is stopped')
 
     async def __aenter__(self):
         await self.start()

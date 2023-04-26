@@ -28,6 +28,8 @@ class TestModelHost(unittest.IsolatedAsyncioTestCase):
             MyModel,
             batcher=ConcatBatcher(),
             max_batch_size=32,
+            wait_ms=10,
+            wait_n=16,
             num_workers=multiprocessing.cpu_count()
         )(self.weights)
         await self.model_host.start()
