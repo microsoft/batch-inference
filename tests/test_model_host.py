@@ -6,7 +6,7 @@ import unittest
 
 import numpy as np
 
-from batch_inference import ModelHost, aio
+from batch_inference import ModelHost
 from batch_inference.batcher import ConcatBatcher
 
 
