@@ -3,11 +3,11 @@ import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
 from benchmark import benchmark, benchmark_sync
-from docs.examples.llm_completion import Gpt2Model
+from gpt2_completion import Gpt2Completion
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-class Gpt2:
+class Gpt2Baseline:
     def __init__(self):
         self.model = GPT2LMHeadModel.from_pretrained("gpt2").to(device)
         self.max_output_length = 64
@@ -60,12 +60,12 @@ def main():
         queries.append((tokenizer.encode(text),))
 
     print("Test without batching")
-    raw_model = Gpt2()
-    benchmark(raw_model, queries, num_calls=10, parallel=1, warm_up_calls=10)
-    print(f"Query count: {raw_model.query_count}. Token count : {raw_model.token_count}")
+    baseline = Gpt2Baseline()
+    benchmark(baseline, queries, num_calls=10, parallel=1, warm_up_calls=10)
+    print(f"Query count: {baseline.query_count}. Token count : {baseline.token_count}")
 
     print("Test with batching")
-    with Gpt2Model.host() as model_host:
+    with Gpt2Completion.host() as model_host:
         benchmark_sync(model_host, queries, num_calls=10, parallel=10, warm_up_calls=10)
         print(f"Query count: {model_host.model_obj.query_count}. Batch count: {model_host.model_obj.batch_count} Token count: {model_host.model_obj.token_count}. Inference count: {model_host.model_obj.inference_count}")
 

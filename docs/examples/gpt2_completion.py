@@ -49,7 +49,7 @@ class Gpt2Batcher(Batcher):
 
 
 @batching(batcher=Gpt2Batcher(), max_batch_size=4)
-class Gpt2Model:
+class Gpt2Completion:
     def __init__(self):
         self.model = GPT2LMHeadModel.from_pretrained("gpt2").to(device)
         self.max_output_length = 64
@@ -132,7 +132,7 @@ def main():
     text = "The Manhattan bridge"
     tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
     input_ids = tokenizer.encode(text)
-    with Gpt2Model.host() as model_host:
+    with Gpt2Completion.host() as model_host:
         output_ids = model_host.predict(input_ids)
         result = tokenizer.decode(output_ids)
         print(result)
