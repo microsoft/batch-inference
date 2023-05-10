@@ -48,13 +48,13 @@ class Gpt2Batcher(Batcher):
         return batched_responses
 
 
-@batching(batcher=Gpt2Batcher(), max_batch_size=4)
+@batching(batcher=Gpt2Batcher(), max_batch_size=8)
 class Gpt2Completion:
     def __init__(self):
         self.model = GPT2LMHeadModel.from_pretrained("gpt2").to(device)
         self.max_output_length = 64
         self.eos_token = 50256   # Token of <|endoftext|>
-        # statistics
+        # counters
         self.token_count = 0
         self.inference_count = 0
         self.query_count = 0
@@ -101,7 +101,7 @@ class Gpt2Completion:
                 for index in finished:
                     del processing[index]
                     del tokens[index]
-                    past_key_values = self.delete_index_past_key_values(
+                    past_key_values = self._delete_index_past_key_values(
                         past_key_values, index
                     )
                     attention_masks = torch.cat(
@@ -117,7 +117,13 @@ class Gpt2Completion:
 
         return results
 
-    def delete_index_past_key_values(self, past_key_values, index):
+    def reset_counters(self):
+        self.token_count = 0
+        self.inference_count = 0
+        self.query_count = 0
+        self.batch_count = 0
+
+    def _delete_index_past_key_values(self, past_key_values, index):
         # Shape: (layer, k&v, [batchsize, head, token length, head dim]), for example: (12, 2, [batchsize, 12, n, 64]) for GPT2 small
         deleted = []
         for i, layer in enumerate(past_key_values):

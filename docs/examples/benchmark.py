@@ -31,8 +31,11 @@ def benchmark_sync(host, queries, num_calls, parallel, warm_up_calls=0):
         host.predict(*q)
 
     with ThreadPoolExecutor(max_workers=parallel) as executor:
+        # rum warm up queries
         futures = [executor.submit(request, i) for i in range(warm_up_calls)]
         result = [f.result() for f in as_completed(futures)]
+        if host.model_obj.reset_counters:
+            host.model_obj.reset_counters()
         print("Start Running")
         add_timer_to_model(host.model_obj)
         start_time = time.time()
@@ -49,8 +52,11 @@ async def benchmark_async(host, queries, num_calls, warm_up_calls=0):
         q = queries[i % len(queries)]
         await host.predict(*q)
 
+    # rum warm up queries
     tasks = [asyncio.create_task(request(i)) for i in range(warm_up_calls)]
     await asyncio.wait(tasks)
+    if host.model_obj.reset_counters:
+        host.model_obj.reset_counters()
     print("Start Running")
     add_timer_to_model(host.model_obj)
     start_time = time.time()
@@ -68,8 +74,11 @@ def benchmark(model_obj, queries, num_calls, parallel, warm_up_calls=0):
         model_obj.predict_batch(*q)
 
     with ThreadPoolExecutor(max_workers=parallel) as executor:
+        # rum warm up queries
         futures = [executor.submit(request, i) for i in range(warm_up_calls)]
         result = [f.result() for f in as_completed(futures)]
+        if model_obj.reset_counters:
+            model_obj.reset_counters()
         print("Start Running")
         add_timer_to_model(model_obj)
         start_time = time.time()

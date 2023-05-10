@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
 
 import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
@@ -12,7 +14,7 @@ class Gpt2Baseline:
         self.model = GPT2LMHeadModel.from_pretrained("gpt2").to(device)
         self.max_output_length = 64
         self.eos_token = 50256   # Token of <|endoftext|>
-        # statistics
+        # counters
         self.token_count = 0
         self.query_count = 0
 
@@ -38,6 +40,10 @@ class Gpt2Baseline:
             if token == self.eos_token:
                 break
         return sequence
+    
+    def reset_counters(self):
+        self.token_count = 0
+        self.query_count = 0
 
 
 def main():
@@ -59,15 +65,15 @@ def main():
     for text in texts:
         queries.append((tokenizer.encode(text),))
 
-    print("Test without batching")
-    baseline = Gpt2Baseline()
-    benchmark(baseline, queries, num_calls=10, parallel=1, warm_up_calls=10)
-    print(f"Query count: {baseline.query_count}. Token count : {baseline.token_count}")
-
     print("Test with batching")
     with Gpt2Completion.host() as model_host:
-        benchmark_sync(model_host, queries, num_calls=10, parallel=10, warm_up_calls=10)
+        benchmark_sync(model_host, queries, num_calls=100, parallel=16, warm_up_calls=10)
         print(f"Query count: {model_host.model_obj.query_count}. Batch count: {model_host.model_obj.batch_count} Token count: {model_host.model_obj.token_count}. Inference count: {model_host.model_obj.inference_count}")
+    
+    print("Test baseline")
+    baseline = Gpt2Baseline()
+    benchmark(baseline, queries, num_calls=100, parallel=2, warm_up_calls=10)
+    print(f"Query count: {baseline.query_count}. Token count : {baseline.token_count}")
 
 
 if __name__ == "__main__":
