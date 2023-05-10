@@ -26,6 +26,8 @@ python -m unittest discover tests
 
 ## Example
 
+The **batching** decorator adds host() method to use **ModelHost** object. The **predict** method of ModelHost takes a single query as input, and it will merge multiple queries into a batch before calling **predict_batch** method. The predict method also splits outputs from predict_batch method before it returns result.
+
 ```python
 import threading
 import numpy as np
@@ -54,6 +56,10 @@ with MyModel.host(3, 3) as host:
     [th.join() for th in threads]
 
 ```
+
+While ModelHost can gather queries from multiple threads of a process, **RemoteModelHost** can gather queries from multiple processes to avoid GIL's impact on performance. [ModelHost](https://microsoft.github.io/batch-inference/model_host.html) and [RemoteModelHost](https://microsoft.github.io/batch-inference/remote_model_host.html) explain how they work.
+
+**Batcher** is responsible to merge queries and split outputs. We provide a set of built-in Batchers for common scenarios, but you also use your own Batcher. See [What is Batcher](https://microsoft.github.io/batch-inference/batcher/what_is_batcher.html) for more information.
 
 ## Build the Docs
 
