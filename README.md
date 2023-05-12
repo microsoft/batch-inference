@@ -1,6 +1,8 @@
 # Batch Inference Toolkit
 
-Batch Inference Toolkit(batch-inference) is a Python package that batches model input tensors coming from multiple users dynamically, executes the model, un-batches output tensors and then returns them back to each user respectively. This will improve system throughput because of a better cache locality. The entire process is transparent to developers.
+Batch Inference Toolkit(batch-inference) is a Python package that batches model input tensors coming from multiple users dynamically, executes the model, un-batches output tensors and then returns them back to each user respectively. This will improve system throughput because of better compute parallelism and better cache locality. The entire process is transparent to developers. 
+
+The library provides very flexible APIs so it can be used in complex scenarios like LLM and [RNN models](https://github.com/microsoft/batch-inference/blob/main/tests/test_torch_rnn_batcher.py). It achieved **4 times throughput improvement** on **GPT completion** in our [experiment](https://microsoft.github.io/batch-inference/examples/gpt_completion.html).
 
 ## Installation
 
@@ -26,10 +28,11 @@ python -m unittest discover tests
 
 ## Example
 
-The **batching** decorator adds host() method to use **ModelHost** object. The **predict** method of ModelHost takes a single query as input, and it will merge multiple queries into a batch before calling **predict_batch** method. The predict method also splits outputs from predict_batch method before it returns result.
+We provide more practical examples including [GPT completion](https://microsoft.github.io/batch-inference/examples/gpt_completion.html) and [Bert embedding](https://microsoft.github.io/batch-inference/examples/bert_mpletion.html) in tutorials, however let's start with a toy model here to learn the APIs.
+
+The **batching** decorator adds host() method to create **ModelHost** object. The **predict** method of ModelHost takes a single query as input, and it will merge multiple queries into a batch before calling **predict_batch** method. The predict method also splits outputs from predict_batch method before it returns result.
 
 ```python
-import threading
 import numpy as np
 from batch_inference import batching
 
@@ -45,16 +48,14 @@ class MyModel:
         return y
 
 
-with MyModel.host(3, 3) as host:
-    def send_requests():
-        for _ in range(0, 10):
-            x = np.random.randn(1, 3, 3).astype("f")
-            y = host.predict(x)
+host = MyModel.host(3, 3)
+host.start()
 
-    threads = [threading.Thread(target=send_requests) for i in range(0, 32)]
-    [th.start() for th in threads]
-    [th.join() for th in threads]
+for _ in range(0, 10):
+    x = np.random.randn(1, 3, 3).astype("f")
+    y = host.predict(x)
 
+host.stop()
 ```
 
 While ModelHost can gather queries from multiple threads of a process, **RemoteModelHost** can gather queries from multiple processes to avoid GIL's impact on performance. [ModelHost](https://microsoft.github.io/batch-inference/model_host.html) and [RemoteModelHost](https://microsoft.github.io/batch-inference/remote_model_host.html) explain how they work.

@@ -34,7 +34,7 @@ def benchmark_sync(host, queries, num_calls, parallel, warm_up_calls=0):
         # rum warm up queries
         futures = [executor.submit(request, i) for i in range(warm_up_calls)]
         result = [f.result() for f in as_completed(futures)]
-        if host.model_obj.reset_counters:
+        if hasattr(host.model_obj, "reset_counters"):
             host.model_obj.reset_counters()
         print("Start Running")
         add_timer_to_model(host.model_obj)
@@ -55,7 +55,7 @@ async def benchmark_async(host, queries, num_calls, warm_up_calls=0):
     # rum warm up queries
     tasks = [asyncio.create_task(request(i)) for i in range(warm_up_calls)]
     await asyncio.wait(tasks)
-    if host.model_obj.reset_counters:
+    if hasattr(host.model_obj, "reset_counters"):
         host.model_obj.reset_counters()
     print("Start Running")
     add_timer_to_model(host.model_obj)
@@ -77,7 +77,7 @@ def benchmark(model_obj, queries, num_calls, parallel, warm_up_calls=0):
         # rum warm up queries
         futures = [executor.submit(request, i) for i in range(warm_up_calls)]
         result = [f.result() for f in as_completed(futures)]
-        if model_obj.reset_counters:
+        if hasattr(model_obj, "reset_counters"):
             model_obj.reset_counters()
         print("Start Running")
         add_timer_to_model(model_obj)

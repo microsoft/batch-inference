@@ -1,6 +1,6 @@
 ==========================
-LLM Embedding
+Bert Embedding
 ==========================
 
-.. literalinclude:: ./llm_embedding.py
+.. literalinclude:: ./bert_embedding.py
     :language: python
