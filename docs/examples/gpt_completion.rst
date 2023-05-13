@@ -2,35 +2,36 @@
 GPT Completion
 ==========================
 
-This tutorial shows the benefit of applying batch-inference on GPT completion scenario, and it also provides the code to do it.
+This tutorial shows the benchmark of applying batch-inference on GPT completion scenario, and code is provided.
 
 Huggingface GPT2 model is used here as it's open source. Greedy search is used to generate next token, other kinds of decoding strategies like beam search can be also applied but they will this tutorial too complex. 
 
-Here's the result running the benchmark code on a NVIDIA GeForce RTX 2080 Ti GPU, the batching version finished 100 queries with 6400 tokens in about 12 seconds, while baseline version took about 63 seconds, and that means applying batch-inference can provide **4 times throughput improvement**. 
+Here's the result running the benchmark code on a NVIDIA GeForce RTX 2080 Ti GPU, the batching version finished 100 queries with 6400 tokens in about 12 seconds, while baseline version took about 63 seconds, 
+and that means applying batch-inference can provide **5 times throughput** comparing to baseline. 
 With batch-inference it can reduce number of inference calls to GPT2 model, and thus reduce total execution time dramatically. 
 
 The max-batch-size is set to 8 due to limited GPU memory, it should achieve even better performance with larger batch size on better GPUs.
 
 .. list-table:: 
-   :widths: 25 25 50
+   :widths: 30 25 25 25 25 25
    :header-rows: 0
 
-   * - 
-     - Baseline GPT2 Completion
-     - GPT2 Completion with batch-inference
-   * - Query Count
+   * - Method
+     - Query Count
+     - Execution Time
+     - Avg Batch Size
+     - Generated Token Count
+     - Inference Count
+   * - Baseline
      - 100
-     - 100
-   * - Execution Time
      - 63.05s
-     - 12.07s
-   * - Avg Batch Size
      - 1
+     - 6400
+     - 6400
+   * - With batch-inference
+     - 100
+     - 12.07s
      - 7.69
-   * - Generated Token Count
-     - 6400
-     - 6400
-   * - Inference Count
      - 6400
      - 832
 
@@ -70,8 +71,8 @@ Baseline GPT2 completion code:
 
 Code links:
 
-`Baseline GPT2 completion <https://github.com/microsoft/batch-inference/blob/main/docs/examples/gpt2_baseline>`__
+`Baseline GPT2 completion <https://github.com/microsoft/batch-inference/blob/main/docs/examples/gpt2_baseline.py>`__
 
-`Applying batching on GPT2 completion <https://github.com/microsoft/batch-inference/blob/main/docs/examples/gpt2_completion>`__
+`Applying batching on GPT2 completion <https://github.com/microsoft/batch-inference/blob/main/docs/examples/gpt2_completion.py>`__
 
-`Benchmark code <https://github.com/microsoft/batch-inference/blob/main/docs/examples/gpt2_completion_benchmark>`__
+`Benchmark code <https://github.com/microsoft/batch-inference/blob/main/docs/examples/gpt2_completion_benchmark.py>`__
