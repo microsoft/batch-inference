@@ -57,19 +57,20 @@ class MyModel:
     def __init__(self, k, n):
         self.weights = np.random.randn((k, n)).astype("f")
 
-    # x: [batch_size, m, k], self.weights: [k, n]
+    # shape of x: [batch_size, m, k]
     def predict_batch(self, x):
         y = np.matmul(x, self.weights)
         return y
 
-
+# initialize MyModel with k=3 and n=3
 host = MyModel.host(3, 3)
 host.start()
 
-x = np.random.randn(1, 3, 3).astype("f")
-y = host.predict(x)
+# shape of x: [1, 3, 3]
+def process_request(x):
+    y = host.predict(x)
+    return y
 
-host.stop()
 ```
 
 **Batcher** is responsible to merge queries and split outputs. In this case ConcatBatcher will concat input tensors into a batched tensors at first dimension. We provide a set of built-in Batchers for common scenarios, and you can also implement your own Batcher. See [What is Batcher](https://microsoft.github.io/batch-inference/batcher/what_is_batcher.html) for more information.
