@@ -13,39 +13,46 @@ As shown in the table, Bulk Sequence Batcher can achieve about **3.7 times throu
 The experiments were run on NVIDIA GeForce RTX 2080 Ti GPU. 
 
 .. list-table:: 
-   :widths: 25 25 25 25 25
+   :widths: 25 25 25 25 25 25
    :header-rows: 0
 
    * - Method
      - Query Count
      - Execution Time
+     - Throughput comparing to Baseline
      - Max Batch Size Setting
      - Avg Batch Size
    * - Baseline
      - 2000
      - 79.84s
+     - 1x
      - /
      - 1
    * - Sequence Batcher
      - 2000
      - 40.64s
+     - 1.9x
      - 4
      - 4
    * - Sequence Batcher
      - 2000
      - 34.40s
+     - 2.3x
      - 8
      - 7.96
    * - Sequence Batcher
      - 2000
      - 32.49s
+     - 2.4x
      - 32
      - 31.25
    * - Bulk Sequence Batcher
      - 2000
-     - 21.31
+     - 21.31s
+     - 3.7x
      - 32
      - 15.74
+
 
 Bert embedding with Bulk Sequence Batcher:
 
