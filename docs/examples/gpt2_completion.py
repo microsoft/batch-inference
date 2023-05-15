@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import threading
-import unittest
 from typing import Any, List, Tuple
 
 import torch
@@ -11,6 +9,7 @@ from transformers import GPT2LMHeadModel, GPT2Tokenizer
 from batch_inference import batching
 from batch_inference.batcher import Batcher
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class Gpt2Batcher(Batcher):
     def __init__(self) -> None:
@@ -49,22 +48,25 @@ class Gpt2Batcher(Batcher):
         return batched_responses
 
 
-# eos_token = 50256   # Token of <|endoftext|>
-eos_token = 13  # Token of .  Use for debugging
-
-
-@batching(batcher=Gpt2Batcher(), max_batch_size=4)
-class Gpt2Model:
+@batching(batcher=Gpt2Batcher(), max_batch_size=8)
+class Gpt2Completion:
     def __init__(self):
-        self.model = GPT2LMHeadModel.from_pretrained("gpt2")
+        self.model = GPT2LMHeadModel.from_pretrained("gpt2").to(device)
         self.max_output_length = 64
-        self.eos_token = eos_token
+        self.eos_token = 50256   # Token of <|endoftext|>
+        # counters
+        self.token_count = 0
+        self.inference_count = 0
+        self.query_count = 0
+        self.batch_count = 0
 
     def predict_batch(self, input_ids, attention_masks):
         past_key_values = None
         length = len(input_ids)
-        input_ids = torch.tensor(input_ids)
-        attention_masks = torch.tensor(attention_masks)
+        self.query_count += length
+        self.batch_count += 1
+        input_ids = torch.tensor(input_ids).to(device)
+        attention_masks = torch.tensor(attention_masks).to(device)
         results = []
         for i in range(length):
             results.append([])
@@ -87,8 +89,11 @@ class Gpt2Model:
             finished = []
             for i, actual_index in enumerate(processing):
                 results[actual_index].append(tokens[i])
-                if tokens[i] == eos_token:
+                if tokens[i] == self.eos_token:
                     finished.append(i)
+            
+            self.inference_count += 1
+            self.token_count += len(tokens)
 
             if finished:
                 finished.reverse()
@@ -96,7 +101,7 @@ class Gpt2Model:
                 for index in finished:
                     del processing[index]
                     del tokens[index]
-                    past_key_values = self.delete_index_past_key_values(
+                    past_key_values = self._delete_index_past_key_values(
                         past_key_values, index
                     )
                     attention_masks = torch.cat(
@@ -106,13 +111,19 @@ class Gpt2Model:
                 break
 
             # input_ids will contain generated token id, while attention_masks contains historical masks
-            input_ids = torch.tensor(tokens, dtype=torch.int32).unsqueeze(1)
-            new_mask = torch.ones(len(processing), dtype=torch.int32).unsqueeze(1)
+            input_ids = torch.tensor(tokens, dtype=torch.int32).unsqueeze(1).to(device)
+            new_mask = torch.ones(len(processing), dtype=torch.int32).unsqueeze(1).to(device)
             attention_masks = torch.cat([attention_masks, new_mask], dim=1)
 
         return results
 
-    def delete_index_past_key_values(self, past_key_values, index):
+    def reset_counters(self):
+        self.token_count = 0
+        self.inference_count = 0
+        self.query_count = 0
+        self.batch_count = 0
+
+    def _delete_index_past_key_values(self, past_key_values, index):
         # Shape: (layer, k&v, [batchsize, head, token length, head dim]), for example: (12, 2, [batchsize, 12, n, 64]) for GPT2 small
         deleted = []
         for i, layer in enumerate(past_key_values):
@@ -123,48 +134,14 @@ class Gpt2Model:
         return tuple(deleted)
 
 
-class TestModelHost(unittest.TestCase):
-    def setUp(self) -> None:
-        self.model_host = Gpt2Model.host()
-        self.model_host.start()
-
-    def tearDown(self) -> None:
-        self.model_host.stop()
-
-    def test_simple(self):
-        text = "The Manhattan bridge"
-        tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-        input_ids = tokenizer.encode(text)
-        output_ids = self.model_host.predict(input_ids)
+def main():
+    text = "The Manhattan bridge"
+    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+    input_ids = tokenizer.encode(text)
+    with Gpt2Completion.host() as model_host:
+        output_ids = model_host.predict(input_ids)
         result = tokenizer.decode(output_ids)
-        self.assertTrue(len(result) > 0)
-
-    def test_concurrent(self):
-        def send_requests():
-            texts = [
-                "The Manhattan bridge",
-                "Python lists are a data structure similar to dynamically",
-                "Tuples in Python are a data structure used to store multiple elements in a single variable. Just like list data structure, a tuple is",
-                "Even though List and Tuple are different data structures",
-                "An operating system (OS) is the program that",
-                "An operating system brings powerful benefits to computer software",
-                "As long as each application accesses the same resources and services",
-                "An operating system provides three essential capabilities: ",
-                "The GUI is most frequently used by casual or end users that are primarily",
-                "An operating system can",
-            ]
-            tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-            for i in range(0, 10):
-                input_ids = tokenizer.encode(texts[i])
-                output_ids = self.model_host.predict(input_ids)
-                result = tokenizer.decode(output_ids)
-                # print("Input: " + texts[i] + "------- Output: " + result)
-                self.assertTrue(len(result) > 0)
-
-        threads = [threading.Thread(target=send_requests) for i in range(0, 10)]
-        [th.start() for th in threads]
-        [th.join() for th in threads]
-
+        print(result)
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

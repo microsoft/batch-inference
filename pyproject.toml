@@ -26,6 +26,7 @@ dependencies = [
   "msgpack",
   "msgpack-numpy",
   "numpy",
+  "protobuf",
 ]
 optional-dependencies.docs = [
   "flask>=2.0.2",
@@ -34,7 +35,9 @@ optional-dependencies.docs = [
   "sphinx-autodoc-typehints!=1.23.4,>=1.22",
   "sphinx_rtd_theme",
   "myst_parser",
-  "sphinxemoji"
+  "sphinxemoji",
+  "transformers>=4.27.4",
+  "chardet>=5.1.0",
 ]
 optional-dependencies.testing = [
   "onnxruntime",
