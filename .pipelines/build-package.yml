@@ -1,0 +1,45 @@
+trigger: none
+jobs:
+- job: batch_inference
+  timeoutInMinutes: 180
+  displayName: 'build batch-inference wheel'
+  pool:
+    vmImage: 'windows-2022'
+  variables:
+    artifactDir: $(Build.ArtifactStagingDirectory)
+  strategy:
+    matrix:
+      'py310':
+        pythonVer: 3.10
+        artifactName: batch-inference-python310
+  steps:
+  - checkout: self
+    lfs: true
+  - task: UsePythonVersion@0
+    displayName: 'Use python $(pythonVer)'
+    inputs:
+      versionSpec: $(pythonVer)
+  - script: |
+      python -m pip install --upgrade pip setuptools wheel twine build virtualenv mypy
+    workingDirectory: .
+    displayName: Install dependent tools
+  - script: |
+      python -m build . --wheel
+    displayName: 'Build batch-inference wheel'
+    workingDirectory: .
+  - script: |
+      cp dist/*.whl $(artifactDir)
+    displayName: Copy targets to staging folder
+  - publish: $(artifactDir)
+    artifact: $(artifactName)
+  - task: EsrpRelease@2
+    inputs:
+      ConnectedServiceName: 'ml-inference ESRP Release Publishing service connection'
+      Intent: 'PackageDistribution'
+      ContentType: 'PyPi'
+      PackageLocation: '$(artifactDir)'
+      Owners: '$(environment.esrp_onwer)'
+      Approvers: '$(environment.esrp_approvers)'
+      ServiceEndpointUrl: '$(environment.endpoint_url)'
+      MainPublisher: 'MLInference'
+      DomainTenantId: '$(environment.tenant_id)'
