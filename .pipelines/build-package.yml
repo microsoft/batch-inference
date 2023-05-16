@@ -38,7 +38,7 @@ jobs:
       Intent: 'PackageDistribution'
       ContentType: 'PyPi'
       PackageLocation: '$(artifactDir)'
-      Owners: '$(esrp_onwer)'
+      Owners: '$(esrp_owner)'
       Approvers: '$(esrp_approvers)'
       ServiceEndpointUrl: '$(endpoint_url)'
       MainPublisher: 'MLInference'
