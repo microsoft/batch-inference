@@ -52,13 +52,13 @@ def main():
         benchmark_sync(model_host, queries, num_calls=2000, parallel=64, warm_up_calls=100)
         print(f"Query count: {model_host.model_obj.query_count}. Batch count: {model_host.model_obj.batch_count}")
 
-    print("Test with SeqBatcher max batch size 8")
+    print("Test with SeqBatcher max batch size 64")
     with ModelHost(
             BertEmbeddingModel,
             batcher=SeqBatcher(padding_tokens=[0, 0], tensor='pt'),
-            max_batch_size=8,
+            max_batch_size=64,
         )() as model_host:
-        benchmark_sync(model_host, queries, num_calls=2000, parallel=64, warm_up_calls=100)
+        benchmark_sync(model_host, queries, num_calls=2000, parallel=100, warm_up_calls=100)
         print(f"Query count: {model_host.model_obj.query_count}. Batch count: {model_host.model_obj.batch_count}")
     
     print("Test baseline")

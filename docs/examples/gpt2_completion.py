@@ -48,7 +48,7 @@ class Gpt2Batcher(Batcher):
         return batched_responses
 
 
-@batching(batcher=Gpt2Batcher(), max_batch_size=8)
+@batching(batcher=Gpt2Batcher(), max_batch_size=32)
 class Gpt2Completion:
     def __init__(self):
         self.model = GPT2LMHeadModel.from_pretrained("gpt2").to(device)

@@ -29,7 +29,7 @@ def main():
 
     print("Test with batching")
     with Gpt2Completion.host() as model_host:
-        benchmark_sync(model_host, queries, num_calls=100, parallel=16, warm_up_calls=10)
+        benchmark_sync(model_host, queries, num_calls=100, parallel=64, warm_up_calls=10)
         print(f"Query count: {model_host.model_obj.query_count}. Batch count: {model_host.model_obj.batch_count} Token count: {model_host.model_obj.token_count}. Inference count: {model_host.model_obj.inference_count}")
     
     print("Test baseline")

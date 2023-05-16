@@ -8,9 +8,9 @@ Two batching methods Sequence Batcher and Bulk Sequence Batcher were tested.
 `Sequence Batcher <https://microsoft.github.io/batch-inference/batcher/seq_batcher.html>`__ will pad input sequences to same length within a batch. 
 Additionally, `Bulk Sequence Batcher <https://microsoft.github.io/batch-inference/batcher/bucket_seq_batcher.html>`__ divides inputs sequences of different lengths into four buckes [1, 16], [17, 32], [33, 64], [64,) based on given bucket setting. 
 
-As shown in the table, Bulk Sequence Batcher can achieve about **3.7 times throughput** and Sequence Batcher can achieve about **2.4 times throughput** comparing to baseline.
+As shown in the table, Bulk Sequence Batcher can achieve about **4.7 times throughput** and Sequence Batcher can achieve about **3.6 times throughput** comparing to baseline.
 
-The experiments were run on NVIDIA GeForce RTX 2080 Ti GPU. 
+The experiments were run on NVIDIA V100 GPU. 
 
 .. list-table:: 
    :widths: 25 25 25 25 25 25
@@ -24,32 +24,32 @@ The experiments were run on NVIDIA GeForce RTX 2080 Ti GPU.
      - Avg Batch Size
    * - Baseline
      - 2000
-     - 79.84s
+     - 37.75s
      - 1x
      - /
      - 1
    * - Sequence Batcher
      - 2000
-     - 40.64s
-     - 1.9x
+     - 14.88s
+     - 2.5x
      - 4
-     - 4
+     - 3.99
    * - Sequence Batcher
      - 2000
-     - 34.40s
-     - 2.3x
-     - 8
-     - 7.96
-   * - Sequence Batcher
-     - 2000
-     - 32.49s
-     - 2.4x
+     - 10.54s
+     - 3.5x
      - 32
      - 31.25
+   * - Sequence Batcher
+     - 2000
+     - 10.38s
+     - 3.6x
+     - 64
+     - 48.78
    * - Bulk Sequence Batcher
      - 2000
-     - 21.31s
-     - 3.7x
+     - 7.93s
+     - 4.7x
      - 32
      - 15.74
 
