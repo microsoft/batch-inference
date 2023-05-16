@@ -25,13 +25,13 @@ It can improve your server throughput up to multiple times
 
 ## Installation
 
-**Install from Pip** _(Coming Soon)_
+Install from Pip
 
 ```bash
 python -m pip install batch-inference --upgrade
 ```
 
-**Build and Install from Source** _(for developers)_
+Build and Install from Source _(for developers)_
 
 ```bash
 git clone https://github.com/microsoft/batch-inference.git
