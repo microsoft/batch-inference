@@ -7,14 +7,14 @@ requires = [
 
 [project]
 name = "batch-inference"
-version = "1.0rc1"
+version = "1.0"
 description = "Batch Inference"
 readme = "README.md"
-authors = [{ name = "Xi Chen", email = "xichen5@microsoft.com" },
+authors = [{ name = "Yong Huang", email = "yohuan@microsoft.com" },
+    { name = "Xi Chen", email = "xichen5@microsoft.com" },
     { name = "Lu Ye", email = "luye@microsoft.com" },
-    { name = "Yong Huang", email = "yohuan@microsoft.com" },
     { name = "Ze Tao", email = "zetao@microsoft.com" }]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",

@@ -30,4 +30,5 @@
     :titlesonly:
     :caption: Examples
 
-    ./examples/llm_embedding.rst
+    ./examples/bert_embedding.rst
+    ./examples/gpt_completion.rst

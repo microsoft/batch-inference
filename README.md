@@ -16,8 +16,12 @@ It can improve your server throughput up to multiple times
 * Only few lines code change is needed to onboard using built-in [batching algorithms](https://microsoft.github.io/batch-inference/batcher/what_is_batcher.html)
 * Flexible APIs to support customized batching algorithms and input types
 * Support [multi-process remote mode](https://microsoft.github.io/batch-inference/remote_model_host.html) to avoid python GIL bottleneck
-* Tutorials and benchmarks on popular models like [GPT](https://microsoft.github.io/batch-inference/examples/gpt_completion.html) and [Bert](https://microsoft.github.io/batch-inference/examples/bert_embedding.html)
+* Tutorials and benchmarks on popular models:
 
+| Model | Throughput Comparing to Baseline | Links |
+| :-----| :---- | :---- |
+| Bert Embedding | 4.7x | [Tutorial](https://microsoft.github.io/batch-inference/examples/gpt_completion.html)  |
+| GPT Completion | 16x | [Tutorial](https://microsoft.github.io/batch-inference/examples/bert_embedding.html) |
 
 ## Installation
 

@@ -6,37 +6,38 @@ This tutorial shows the benchmark of applying batch-inference on GPT completion 
 
 Huggingface GPT2 model is used here as it's open source. Greedy search is used to generate next token, other kinds of decoding strategies like beam search can be also applied but they will this tutorial too complex. 
 
-Here's the result running the benchmark code on a NVIDIA GeForce RTX 2080 Ti GPU, the batching version finished 100 queries with 6400 tokens in about 12 seconds, while baseline version took about 63 seconds, 
-and that means applying batch-inference can provide **5.2 times throughput** comparing to baseline. 
+Here's the result running the benchmark code on a NVIDIA V100 GPU, the batching version finished 100 queries with 6400 tokens in 4.86 seconds, while baseline version took 78.04 seconds, 
+and that means applying batch-inference can provide **16 times throughput** comparing to baseline. 
 With batch-inference it can reduce number of inference calls to GPT2 model, and thus reduce total execution time dramatically. 
 
-The max-batch-size is set to 8 due to limited GPU memory, it should achieve even better performance with larger batch size on better GPUs.
-
 .. list-table:: 
-   :widths: 30 25 25 25 25 25 25
+   :widths: 30 25 25 25 25 25 25 25
    :header-rows: 0
 
    * - Method
      - Query Count
      - Execution Time
      - Throughput comparing to Baseline
+     - Max Batch Size
      - Avg Batch Size
      - Generated Token Count
      - Inference Count
    * - Baseline
      - 100
-     - 63.05s
+     - 78.04s
      - 1x
+     - 1
      - 1
      - 6400
      - 6400
    * - With batch-inference
      - 100
-     - 12.07s
-     - 5.2x
-     - 7.69
+     - 4.86s
+     - 16x
+     - 32
+     - 25
      - 6400
-     - 832
+     - 256
 
 
 Baseline GPT2 completion code:
