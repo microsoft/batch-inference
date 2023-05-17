@@ -1,6 +1,6 @@
 # Batch Inference Toolkit
 
-Batch Inference Toolkit(batch-inference) is a Python package that batches model input tensors coming from multiple users dynamically, executes the model, un-batches output tensors and then returns them back to each user respectively. This will improve system throughput because of better compute parallelism and better cache locality. The entire process is transparent to developers. 
+Batch Inference Toolkit(batch-inference) is a Python package that batches model input tensors coming from multiple requests dynamically, executes the model, un-batches output tensors and then returns them back to each request respectively. This will improve system throughput because of better compute parallelism and better cache locality. The entire process is transparent to developers. 
 
 ## When to use
 
@@ -59,7 +59,7 @@ from batch_inference.batcher.concat_batcher import ConcatBatcher
 @batching(batcher=ConcatBatcher(), max_batch_size=32)
 class MyModel:
     def __init__(self, k, n):
-        self.weights = np.random.randn((k, n)).astype("f")
+        self.weights = np.random.randn(k, n).astype("f")
 
     # shape of x: [batch_size, m, k]
     def predict_batch(self, x):
@@ -75,6 +75,7 @@ def process_request(x):
     y = host.predict(x)
     return y
 
+host.stop()
 ```
 
 **Batcher** is responsible to merge queries and split outputs. In this case ConcatBatcher will concat input tensors into a batched tensors at first dimension. We provide a set of built-in Batchers for common scenarios, and you can also implement your own Batcher. See [What is Batcher](https://microsoft.github.io/batch-inference/batcher/what_is_batcher.html) for more information.
