@@ -20,8 +20,8 @@ It can improve your server throughput up to multiple times
 
 | Model | Throughput Comparing to Baseline | Links |
 | :-----| :---- | :---- |
-| Bert Embedding | 4.7x | [Tutorial](https://microsoft.github.io/batch-inference/examples/gpt_completion.html)  |
-| GPT Completion | 16x | [Tutorial](https://microsoft.github.io/batch-inference/examples/bert_embedding.html) |
+| Bert Embedding | 4.7x | [Tutorial](https://microsoft.github.io/batch-inference/examples/bert_embedding.html)  |
+| GPT Completion | 16x | [Tutorial](https://microsoft.github.io/batch-inference/examples/gpt_completion.html) |
 
 ## Installation
 
