@@ -1,6 +1,6 @@
 # Batch Inference Toolkit
 
-Batch Inference Toolkit(batch-inference) is a Python package that batches model input tensors coming from multiple users dynamically, executes the model, un-batches output tensors and then returns them back to each user respectively. This will improve system throughput because of better compute parallelism and better cache locality. The entire process is transparent to developers. 
+Batch Inference Toolkit(batch-inference) is a Python package that batches model input tensors coming from multiple requests dynamically, executes the model, un-batches output tensors and then returns them back to each request respectively. This will improve system throughput because of better compute parallelism and better cache locality. The entire process is transparent to developers. 
 
 ## When to use
 
