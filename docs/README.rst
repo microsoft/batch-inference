@@ -46,7 +46,7 @@ Example
     @batching(max_batch_size=32)
     class MyModel:
         def __init__(self, k, n):
-            self.weights = np.random.randn((k, n)).astype("f")
+            self.weights = np.random.randn(k, n).astype("f")
 
         # x: [batch_size, m, k], self.weights: [k, n]
         def predict_batch(self, x):
